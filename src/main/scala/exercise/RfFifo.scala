@@ -18,13 +18,13 @@ class RfFifo(val dataWidth:Int, val idWidth:Int, val fifoDepth:Int) extends Modu
     val i_cstall        = Input(Bool())
   })
 
-  // val rf = SyncReadMem(fifoDepth, new dataSet(dataWidth, idWidth))
+  //val rf = SyncReadMem(fifoDepth, new dataSet(dataWidth, idWidth))
   val rf = Mem(fifoDepth, new dataSet(dataWidth, idWidth))
-  // val rf = Reg(Vec(fifoDepth, new dataSet(dataWidth, idWidth)))
-  // val initRfValue = Wire(new dataSet(dataWidth, idWidth))
-  // initRfValue.data := 0.U
-  // initRfValue.id := 0.U
-  // val rf = RegInit(VecInit(Seq.fill(fifoDepth)(initRfValue)))
+  //val rf = Reg(Vec(fifoDepth, new dataSet(dataWidth, idWidth)))
+  //val initRfValue = Wire(new dataSet(dataWidth, idWidth))
+  //initRfValue.data := 0.U
+  //initRfValue.id := 0.U
+  //val rf = RegInit(VecInit(Vector.fill(fifoDepth)(initRfValue)))
 
   val wptr = Reg(UInt(log2Ceil(fifoDepth).W))
   val rptr = Reg(UInt(log2Ceil(fifoDepth).W))
