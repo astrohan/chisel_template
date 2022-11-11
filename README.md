@@ -1,13 +1,13 @@
 Chisel template
 =======================
 
-### Code folder tree
+### 1. Code folder tree
 
 ![sbt folder tree](https://astrohan.files.wordpress.com/2022/10/image.png)
 
 
 
-### Generate FIRRTL and Verilog code
+### 2. Generate FIRRTL and Verilog code
 There are two ways to run chisel
  - batch mode (run slowly)
     - ``sbt -v "runMain <PACKAGE_NAME>.<DESIGN_NAME>``
