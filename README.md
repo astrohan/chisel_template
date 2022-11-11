@@ -1,9 +1,29 @@
-Chisel exercise
+Chisel template
 =======================
-chisel codes are placed in **./src/main/scala/exercise**  
-To run chisel, use run.csh as ```run.csh <chisel code name>```
-```
-run.csh RfFifo
+
+### Code folder tree
+
+![sbt folder tree](https://astrohan.files.wordpress.com/2022/10/image.png)
+
+
+
+### Generate FIRRTL and Verilog code
+There are two ways to run chisel
+ - batch mode (run slowly)
+    - ``sbt -v "runMain <PACKAGE_NAME>.<DESIGN_NAME>``
+ - sbt shell (Recommand, more faster)
+    - step1. enter **sbt shell** : ``sbt``
+    - step2. run command : ``runMain <PACKAGE_NAME>.<DESIGN_NAME>``
+
+```sh
+# Ex) batch mode 
+sbt -v "runMain exercise.RfFifo"
+
+# Ex) sbt shell
+sbt
+sbt:chisel_template> runMain example.RfFifo
 ```
 
-Once you runned chisel code, You can find the generated verilog in **./generated**
+Once you've compiled, You can find the generated verilog in **./generated**
+
+
