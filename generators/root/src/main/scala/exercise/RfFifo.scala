@@ -2,13 +2,15 @@ package exercise
 
 import chisel3._
 import chisel3.util._
+import chisel3.stage.ChiselGeneratorAnnotation
+import firrtl.options.TargetDirAnnotation
 
 class dataSet(val dataWidth:Int, val idWidth:Int) extends Bundle {
   val data = UInt(dataWidth.W)
   val id   = UInt(idWidth.W)
 }
 
-class RfFifo(val dataWidth:Int, val idWidth:Int, val fifoDepth:Int) extends Module {
+class RfFifo(val dataWidth:Int = 32, val idWidth:Int = 4, val fifoDepth:Int = 64) extends Module {
   val io = IO(new Bundle {
     val i_pvalid        = Input(Bool())
     val i_pdata         = Input(new dataSet(dataWidth, idWidth))
@@ -53,7 +55,20 @@ class RfFifo(val dataWidth:Int, val idWidth:Int, val fifoDepth:Int) extends Modu
 
 object RfFifo extends App {
   //emitVerilog(new RfFifo(dataWidth=4, idWidth=1, fifoDepth=8))
-  emitVerilog(new RfFifo(dataWidth=4, idWidth=1, fifoDepth=8), Array("--target-dir", "generated"))
+  //emitVerilog(new RfFifo(dataWidth=4, idWidth=1, fifoDepth=8), Array("--target-dir", "generated"))
   //val s = getVerilogString(new RfFifo(dataWidth=4, idWidth=1, fifoDepth=8))
   //println(s)
+  
+  new chisel3.stage.ChiselStage().emitVerilog(
+    new RfFifo(dataWidth=4, idWidth=1, fifoDepth=8), 
+    Array("--target-dir", "generated")
+  ) // same with plain emitVerilog
+  new chisel3.stage.ChiselStage().emitSystemVerilog(
+    new RfFifo(dataWidth=4, idWidth=1, fifoDepth=8), 
+    Array("--target-dir", "generated")
+  ) // generate systemverilog rtl
+  new chisel3.stage.ChiselStage().execute(
+    Array("-X", "verilog"), 
+    Seq(TargetDirAnnotation("generated"), ChiselGeneratorAnnotation(() => new RfFifo(dataWidth=4, idWidth=1, fifoDepth=8)))
+  ) // same with plain emitVerilog
 }
