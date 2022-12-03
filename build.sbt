@@ -1,7 +1,7 @@
 // See README.md for license details.
 import Tests._
 
-val chiselVersion = "3.5.4"
+val chiselVersion = "3.5.5"
 lazy val chiselSettings = Seq(
   libraryDependencies ++= Seq(
     "edu.berkeley.cs" %% "chisel3" % chiselVersion,
@@ -22,7 +22,7 @@ def freshProject(name: String, dir: File): Project = {
 lazy val commonSettings = Seq(
   organization := "com.github.astrohan",
   version := "0.1.0",
-  scalaVersion := "2.13.8",
+  scalaVersion := "2.13.10",
 )
 
 // Rocket-chip dependencies (subsumes making RC a RootProject)
@@ -34,6 +34,7 @@ lazy val hardfloat  = (project in rocketChipDir / "hardfloat")
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.json4s" %% "json4s-jackson" % "3.6.6",
       "org.scalatest" %% "scalatest" % "3.2.0" % "test"
     )
   )
@@ -43,6 +44,7 @@ lazy val rocketMacros  = (project in rocketChipDir / "macros")
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.json4s" %% "json4s-jackson" % "3.6.6",
       "org.scalatest" %% "scalatest" % "3.2.0" % "test"
     )
   )
@@ -52,6 +54,7 @@ lazy val rocketConfig = (project in rocketChipDir / "api-config-chipsalliance/bu
   .settings(
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      "org.json4s" %% "json4s-jackson" % "3.6.6",
       "org.scalatest" %% "scalatest" % "3.2.0" % "test"
     )
   )
@@ -63,6 +66,7 @@ lazy val rocketchip = freshProject("rocketchip", rocketChipDir)
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "org.apache.commons" % "commons-lang3" % "3.12.0",
+      "org.json4s" %% "json4s-jackson" % "3.6.6",
       "org.scalatest" %% "scalatest" % "3.2.0" % "test"
     )
   )
@@ -70,10 +74,11 @@ lazy val rocketchip = freshProject("rocketchip", rocketChipDir)
 lazy val rocketLibDeps = (rocketchip / Keys.libraryDependencies)
 
 
-lazy val root = (project in file("generators/root"))
+// root project
+lazy val exercise = (project in file("generators/exercise"))
   .dependsOn(rocketchip)
   .settings(chiselSettings, commonSettings)
-  .settings(name := "chisel_exercise")
+  .settings(name := "chisel-exercise")
   .settings(
     scalacOptions ++= Seq(
       "-language:reflectiveCalls",

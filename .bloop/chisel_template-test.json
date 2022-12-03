@@ -1,0 +1,157 @@
+{
+    "version": "1.4.0",
+    "project": {
+        "name": "chisel_template-test",
+        "directory": "/home/astrohan/git/chisel/chisel_template",
+        "workspaceDir": "/home/astrohan/git/chisel/chisel_template",
+        "sources": [
+            "/home/astrohan/git/chisel/chisel_template/src/test/scala",
+            "/home/astrohan/git/chisel/chisel_template/src/test/scala-2.12",
+            "/home/astrohan/git/chisel/chisel_template/src/test/scala-2",
+            "/home/astrohan/git/chisel/chisel_template/src/test/java",
+            "/home/astrohan/git/chisel/chisel_template/target/scala-2.12/src_managed/test"
+        ],
+        "dependencies": [
+            "chisel_template",
+            "hardfloat-test",
+            "rocketMacros-test",
+            "rocketConfig-test",
+            "rocketchip-test",
+            "exercise-test"
+        ],
+        "classpath": [
+            "/home/astrohan/git/chisel/chisel_template/.bloop/chisel_template/scala-2.12/classes",
+            "/home/astrohan/.sbt/boot/scala-2.12.14/lib/scala-library.jar"
+        ],
+        "out": "/home/astrohan/git/chisel/chisel_template/.bloop/chisel_template",
+        "classesDir": "/home/astrohan/git/chisel/chisel_template/.bloop/chisel_template/scala-2.12/test-classes",
+        "resources": [
+            "/home/astrohan/git/chisel/chisel_template/src/test/resources",
+            "/home/astrohan/git/chisel/chisel_template/target/scala-2.12/resource_managed/test"
+        ],
+        "scala": {
+            "organization": "org.scala-lang",
+            "name": "scala-compiler",
+            "version": "2.12.14",
+            "options": [
+                
+            ],
+            "jars": [
+                "/home/astrohan/.sbt/boot/scala-2.12.14/lib/scala-library.jar",
+                "/home/astrohan/.sbt/boot/scala-2.12.14/lib/scala-compiler.jar",
+                "/home/astrohan/.sbt/boot/scala-2.12.14/lib/scala-reflect.jar",
+                "/home/astrohan/.sbt/boot/scala-2.12.14/lib/scala-xml_2.12-1.0.6.jar"
+            ],
+            "setup": {
+                "order": "mixed",
+                "addLibraryToBootClasspath": true,
+                "addCompilerToClasspath": false,
+                "addExtraJarsToClasspath": false,
+                "manageBootClasspath": true,
+                "filterLibraryFromClasspath": true
+            }
+        },
+        "java": {
+            "options": [
+                
+            ]
+        },
+        "test": {
+            "frameworks": [
+                {
+                    "names": [
+                        "org.scalacheck.ScalaCheckFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "org.specs2.runner.Specs2Framework",
+                        "org.specs2.runner.SpecsFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "org.specs.runner.SpecsFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "org.scalatest.tools.Framework",
+                        "org.scalatest.tools.ScalaTestFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "com.novocode.junit.JUnitFramework"
+                    ]
+                },
+                {
+                    "names": [
+                        "munit.Framework"
+                    ]
+                }
+            ],
+            "options": {
+                "excludes": [
+                    
+                ],
+                "arguments": [
+                    
+                ]
+            }
+        },
+        "platform": {
+            "name": "jvm",
+            "config": {
+                "home": "/usr/lib/jvm/java-11-openjdk-amd64",
+                "options": [
+                    "-Duser.dir=/home/astrohan/git/chisel/chisel_template"
+                ]
+            },
+            "mainClass": [
+                
+            ]
+        },
+        "resolution": {
+            "modules": [
+                {
+                    "organization": "org.scala-lang",
+                    "name": "scala-library",
+                    "version": "2.12.14",
+                    "configurations": "default",
+                    "artifacts": [
+                        {
+                            "name": "scala-library",
+                            "path": "/home/astrohan/.sbt/boot/scala-2.12.14/lib/scala-library.jar"
+                        },
+                        {
+                            "name": "scala-library",
+                            "classifier": "sources",
+                            "path": "/home/astrohan/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.14/scala-library-2.12.14-sources.jar"
+                        }
+                    ]
+                },
+                {
+                    "organization": "org.scala-lang",
+                    "name": "scala-library",
+                    "version": "2.12.14",
+                    "configurations": "optional",
+                    "artifacts": [
+                        {
+                            "name": "scala-library",
+                            "path": "/home/astrohan/.sbt/boot/scala-2.12.14/lib/scala-library.jar"
+                        },
+                        {
+                            "name": "scala-library",
+                            "classifier": "sources",
+                            "path": "/home/astrohan/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.14/scala-library-2.12.14-sources.jar"
+                        }
+                    ]
+                }
+            ]
+        },
+        "tags": [
+            "test"
+        ]
+    }
+}
