@@ -8,7 +8,6 @@ import chisel3.util.random.FibonacciLFSR
 import freechips.rocketchip.diplomacy.{SimpleNodeImp, RenderedEdge, ValName, SourceNode,
                                        NexusNode, SinkNode, LazyModule, LazyModuleImp}
 
-
 case class UpwardParam(width: Int)
 case class DownwardParam(width: Int)
 case class EdgeParam(width: Int)
@@ -49,11 +48,11 @@ class Adder(implicit p: Parameters) extends LazyModule {
   val node = new AdderNode (
     { case dps: Seq[DownwardParam] =>
       require(dps.forall(dp => dp.width == dps.head.width), "inward, downward adder widths must be equivalent")
-      dps.head
+      dps.head // this is DownardParam type
     },
     { case ups: Seq[UpwardParam] =>
       require(ups.forall(up => up.width == ups.head.width), "outward, upward adder widths must be equivalent")
-      ups.head
+      ups.head // this is UpwardParam type
     }
   )
 
@@ -133,5 +132,9 @@ class AdderTestHarness()(implicit p: Parameters) extends LazyModule {
 
 object GenAdder extends App {
   println("Hello")
-  emitVerilog(LazyModule(new AdderTestHarness()(Parameters.empty)).module, Array("--target-dir", "generated"))
+  //emitVerilog(LazyModule(new AdderTestHarness()(Parameters.empty)).module, Array("--target-dir", "generated"))
+  new chisel3.stage.ChiselStage().emitSystemVerilog(
+    LazyModule(new AdderTestHarness()(Parameters.empty)).module,
+    Array("--target-dir", "generated")
+  ) // generate systemverilog rtl
 }
