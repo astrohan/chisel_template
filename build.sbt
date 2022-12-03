@@ -1,6 +1,9 @@
 // See README.md for license details.
 import Tests._
 
+//-------------------------------------------------
+// Global setting
+//-------------------------------------------------
 val chiselVersion = "3.5.5"
 lazy val chiselSettings = Seq(
   libraryDependencies ++= Seq(
@@ -24,8 +27,13 @@ lazy val commonSettings = Seq(
   version := "0.1.0",
   scalaVersion := "2.13.10",
 )
+//-------------------------------------------------
+// ~Global setting
+//-------------------------------------------------
 
+//-------------------------------------------------
 // Rocket-chip dependencies (subsumes making RC a RootProject)
+//-------------------------------------------------
 val rocketChipDir = file("generators/rocket-chip-221122")
 
 lazy val hardfloat  = (project in rocketChipDir / "hardfloat")
@@ -72,9 +80,14 @@ lazy val rocketchip = freshProject("rocketchip", rocketChipDir)
   )
 
 lazy val rocketLibDeps = (rocketchip / Keys.libraryDependencies)
+//-------------------------------------------------
+// ~Rocket-chip dependencies (subsumes making RC a RootProject)
+//-------------------------------------------------
 
 
+//-------------------------------------------------
 // root project
+//-------------------------------------------------
 lazy val exercise = (project in file("generators/exercise"))
   .dependsOn(rocketchip)
   .settings(chiselSettings, commonSettings)
@@ -88,3 +101,6 @@ lazy val exercise = (project in file("generators/exercise"))
       "-P:chiselplugin:genBundleElements"
     )
   )
+//-------------------------------------------------
+// ~root project
+//-------------------------------------------------

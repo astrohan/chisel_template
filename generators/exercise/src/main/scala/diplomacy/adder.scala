@@ -17,11 +17,15 @@ case class EdgeParam(width: Int)
 //                regardless of whether the edge points into our out of the node.
 // PARAMETER TYPES:                       D              U            E          B(Buldle parameter for hw-port between our modules
 object AdderNodeImp extends SimpleNodeImp[DownwardParam, UpwardParam, EdgeParam, UInt] {
+  // the edge function does the actual negotiation between nodes. 
   def edge(pd: DownwardParam, pu: UpwardParam, p: Parameters, sourceInfo: SourceInfo) = {
     if (pd.width < pu.width) EdgeParam(pd.width) else EdgeParam(pu.width)
   }
+
   def bundle(e: EdgeParam) = UInt(e.width.W)
-  def render(e: EdgeParam) = RenderedEdge("blue", s"width = ${e.width}")
+
+// The render function is required by NodeImps and holds metadata for rendering a view of the negotiated information in some graphical format.
+  def render(e: EdgeParam) = RenderedEdge("blue", s"width = ${e.width}") 
 }
 
 /** node for [[AdderDriver]] (source) */
@@ -41,6 +45,7 @@ class AdderNode(dFn: Seq[DownwardParam] => DownwardParam,
 
 /** adder DUT (nexus) */
 class Adder(implicit p: Parameters) extends LazyModule {
+  // Complete Adder node
   val node = new AdderNode (
     { case dps: Seq[DownwardParam] =>
       require(dps.forall(dp => dp.width == dps.head.width), "inward, downward adder widths must be equivalent")
@@ -51,9 +56,12 @@ class Adder(implicit p: Parameters) extends LazyModule {
       ups.head
     }
   )
+
+  // Describe module of Adder function
   lazy val module = new LazyModuleImp(this) {
     require(node.in.size >= 2)
-    node.out.head._1 := node.in.unzip._1.reduce(_ + _) // unzip????
+    //node.out.head._1 := node.in.unzip._1.reduce(_ + _) // legacy
+    node.out.head._1 := VecInit(node.in.unzip._1).reduceTree(_ + _) // AdderTree
   }
 
   override lazy val desiredName = "Adder"
@@ -105,12 +113,12 @@ class AdderMonitor(width: Int, numOperands: Int)(implicit p: Parameters) extends
 
 /** top-level connector */
 class AdderTestHarness()(implicit p: Parameters) extends LazyModule {
-  val numOperands = 2
+  val numOperands = 8
   val adder = LazyModule(new Adder)
   // 8 will be the downward-traveling widths from our drivers
   val drivers = Seq.fill(numOperands) { LazyModule(new AdderDriver(width = 8, numOutputs = 2)) }
   // 4 will be the upward-traveling width from our monitor
-  val monitor = LazyModule(new AdderMonitor(width = 4, numOperands = numOperands))
+  val monitor = LazyModule(new AdderMonitor(width = 6, numOperands = numOperands))
 
   // create edges via binding operators between nodes in order to define a complete graph
   drivers.foreach{ driver => adder.node := driver.node }
@@ -118,9 +126,7 @@ class AdderTestHarness()(implicit p: Parameters) extends LazyModule {
   drivers.zip(monitor.nodeSeq).foreach { case (driver, monitorNode) => monitorNode := driver.node }
   monitor.nodeSum := adder.node
 
-  lazy val module = new LazyModuleImp(this) {
-    printf("something happend")
-  }
+  lazy val module = new LazyModuleImp(this) 
 
   override lazy val desiredName = "AdderTestHarness"
 }
