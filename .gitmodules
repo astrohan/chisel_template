@@ -1,0 +1,3 @@
+[submodule "generator/rocket-chip-221122"]
+	path = generator/rocket-chip-221122
+	url = https://github.com/astrohan/rocket-chip-221122.git
