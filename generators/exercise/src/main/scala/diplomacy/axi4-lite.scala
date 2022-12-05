@@ -18,6 +18,7 @@ import scala.math.max
 class A4LIntfAddr(params: A4LBundleParams)  extends A4LBundleBase(params) {
     val addr = UInt(params.addrWidth.W)
     val prot = UInt(3.W)
+    val id   = UInt(params.idWidth.W)
 }
 
 // data channel
@@ -29,7 +30,8 @@ class A4LIntfData(params: A4LBundleParams)  extends A4LBundleBase(params) {
 
 // bresp channel
 class A4LIntfResp(params: A4LBundleParams)  extends A4LBundleBase(params) {
-    val resp   = UInt(2.W)
+    val resp = UInt(2.W)
+    val id   = UInt(params.idWidth.W)
 }
 // ----------------------------------------------
 // ~AXI4-Lite bundle
@@ -57,11 +59,11 @@ object A4LBundleParams {
 abstract class A4LBundleBase(params: A4LBundleParams) extends GenericParameterizedBundle(params)
 case class A4LBundle(params: A4LBundleParams) extends A4LBundleBase(params) {
     // this is for master interface. use Flipped for slave interface
-    val aw = Decoupled(new A4LIntfAddr(params))
-    val ar = Decoupled(new A4LIntfAddr(params))
-    val w  = Decoupled(new A4LIntfData(params))
-    val r  = Decoupled(new A4LIntfData(params))
-    val br = Flipped(Decoupled(new A4LIntfResp(params)))
+    val aw = Irrevocable(new A4LIntfAddr(params))
+    val ar = Irrevocable(new A4LIntfAddr(params))
+    val w  = Irrevocable(new A4LIntfData(params))
+    val r  = Flipped(Irrevocable(new A4LIntfData(params)))
+    val br = Flipped(Irrevocable(new A4LIntfResp(params)))
 }
 
 case class A4LEdgeOParams (master: A4LMasterParams, slave: A4LSlaveParams) {
@@ -111,6 +113,61 @@ class A4LMaster(numPorts: Int, addrWidth: Int, dataWidth: Int, idWidth: Int)(imp
     val node = new A4LMasterNode(Seq.fill(numPorts)(A4LMasterParams(addrWidth, dataWidth, idWidth)))
 
     lazy val module = new LazyModuleImp(this) {
+        val io = IO(new Bundle {
+            val dmaEnable = Input(Bool())    // AXI4Lite traffic is generated when dmaEnable is true
+            val maxMO     = Input(UInt(3.W)) // maximum MO = maxMO + 1
+        })
+
+        val awvalid = Seq.fill(numPorts)(Bool())
+        val arvalid = Seq.fill(numPorts)(Bool())
+        val wvalid  = Seq.fill(numPorts)(Bool())
+        val rready  = Seq.fill(numPorts)(true.B)
+        val bready  = Seq.fill(numPorts)(true.B)
+
+        val currentAwMO = Seq.fill(numPorts)(UInt(3.W))
+
+        //(node.in zip node.out) foreach {
+        //    case ((in, edgeIn), (out, edgeOut)) => out.aw.valid := awvalid
+        //}
+        for (i <- 0 until numPorts) {
+            node.out(i)._1.aw.valid := awvalid(i)
+            node.out(i)._1.ar.valid := arvalid(i)
+            node.out(i)._1.w.valid  := wvalid(i)
+
+            when(reset.asBool) {
+                currentAwMO(i) := 0.U
+            }
+
+
+            // awvalid control
+            when(reset.asBool) {
+                awvalid(i) := false.B
+            } .elsewhen(!io.dmaEnable && awvalid(i)) { // disabled DMA
+                awvalid(i) := false.B
+            } .elsewhen(io.maxMO === currentAwMO(i)) { // reached max MO
+                awvalid(i) := false.B
+            } .elsewhen(io.dmaEnable && !awvalid(i)) { // generate aw-transaction
+                awvalid(i) := true.B
+            }
+
+            // wvalid control
+            when(reset.asBool) {
+                wvalid(i) := false.B
+            } .elsewhen(!io.dmaEnable && wvalid(i)) {
+                wvalid(i) := false.B
+            } .elsewhen(io.dmaEnable && !wvalid(i)) {
+                wvalid(i) := true.B
+            }
+
+            // arvalid control
+            when(reset.asBool) {
+                arvalid(i) := false.B
+            } .elsewhen(!io.dmaEnable && arvalid(i)) {
+                arvalid(i) := false.B
+            } .elsewhen(io.dmaEnable && !arvalid(i)) {
+                arvalid(i) := true.B
+            }
+        }
     }
 
     override lazy val desireName = "DMA_AXI4Lite"
