@@ -207,3 +207,31 @@ class A4LMaster(numPorts: Int, addrWidth: Int, dataWidth: Int, idWidth: Int, moC
     override lazy val desireName = "DMA_AXI4Lite"
 }
 
+
+class A4LSlave(moCntWidth: Int)(implicit p: Parameters) extends LazyModule {
+    val node = new A4LSalveNode()
+
+    lazy val module = new LazyModuleImp(this) {
+        val writeDataCount = UInt(moCntWidth.W)
+        
+        when(reset.asBool) {
+            writeDataCount := 0.U
+        } .elsewhen(node.in.w.fire() && !node.out.br.fire()) {
+            writeDataCount := writeDataCount + 1.U
+        } .elsewhen(!node.in.w.fire() && node.out.br.fire()) {
+            writeDataCount := writeDataCount - 1.U
+        }
+    }
+
+    override lazy val desireName = "MEM_AXI4Lite"
+}
+
+
+class A4LTestHarness()(implicit p: Parameters) extends LazyModule {
+    val master = LazyModule(new A4LMaster(numPorts = 6, addrWidth = 32, dataWidth = 64, idWidth = 4, moCntWidth = 4))
+    val slave  = LazyModule(new A4LSlave (moCntWidth = 4))
+
+    slave.node = := master.node
+
+    override lazy val desireName = "AXI4LiteTestHarness"
+}
