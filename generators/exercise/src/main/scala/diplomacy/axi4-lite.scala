@@ -109,13 +109,13 @@ class A4LNexusNode (
 // ----------------------------------------------
 
 
-class A4LMaster(numPorts: Int, addrWidth: Int, dataWidth: Int, idWidth: Int)(implicit p: Parameters) extends LazyModule {
+class A4LMaster(numPorts: Int, addrWidth: Int, dataWidth: Int, idWidth: Int, moCntWidth: Int)(implicit p: Parameters) extends LazyModule {
     val node = new A4LMasterNode(Seq.fill(numPorts)(A4LMasterParams(addrWidth, dataWidth, idWidth)))
 
     lazy val module = new LazyModuleImp(this) {
         val io = IO(new Bundle {
             val dmaEnable = Input(Bool())    // AXI4Lite traffic is generated when dmaEnable is true
-            val maxMO     = Input(UInt(3.W)) // maximum MO = maxMO + 1
+            val maxMO     = Input(UInt(moCntWidth.W)) // maximum MO = maxMO + 1
         })
 
         val awvalid = Seq.fill(numPorts)(Bool())
@@ -124,27 +124,61 @@ class A4LMaster(numPorts: Int, addrWidth: Int, dataWidth: Int, idWidth: Int)(imp
         val rready  = Seq.fill(numPorts)(true.B)
         val bready  = Seq.fill(numPorts)(true.B)
 
-        val currentAwMO = Seq.fill(numPorts)(UInt(3.W))
+        val writeDataCount = Seq.fill(numPorts)(moCntWidth.W)
+        val writeRespCount = Seq.fill(numPorts)(moCntWidth.W)
+        val readCount  = Seq.fill(numPorts)(moCntWidth.W)
 
         //(node.in zip node.out) foreach {
         //    case ((in, edgeIn), (out, edgeOut)) => out.aw.valid := awvalid
         //}
         for (i <- 0 until numPorts) {
             node.out(i)._1.aw.valid := awvalid(i)
-            node.out(i)._1.ar.valid := arvalid(i)
-            node.out(i)._1.w.valid  := wvalid(i)
+            mode.out(i)._1.aw.addr  := 0.U // TODO
+            mode.out(i)._1.aw.prot  := 0.U // TODO
+            mode.out(i)._1.aw.it    := 0.U // TODO
 
+            node.out(i)._1.ar.valid := arvalid(i)
+            mode.out(i)._1.ar.addr  := 0.U // TODO
+            mode.out(i)._1.ar.prot  := 0.U // TODO
+            mode.out(i)._1.ar.it    := 0.U // TODO
+
+            node.out(i)._1.w.valid  := wvalid(i)
+            node.out(i)._1.w.data   := 0.U // TODO
+            node.out(i)._1.w.strb   := UIntToOH(dataWidth) - 1
+
+            // write data MO counter
             when(reset.asBool) {
-                currentAwMO(i) := 0.U
+                writeDataCount(i) := 0.U
+            } .elsewhen(node.out(i)._1.aw.fire() && !node.out(i)._1.w.fire()) {
+                writeDataCount(i) := writeDataCount(i) + 1.U
+            } .elsewhen(!node.out(i)._1.aw.fire() && node.out(i)._1.w.fire()) {
+                writeDataCount(i) := writeDataCount(i) - 1.U
             }
 
+            // write resp MO counter
+            when(reset.asBool) {
+                writeRespCount(i) := 0.U
+            } .elsewhen(node.out(i)._1.aw.fire() && !node.out(i)._1.br.fire()) {
+                writeRespCount(i) := writeRespCount(i) + 1.U
+            } .elsewhen(!node.out(i)._1.aw.fire() && node.out(i)._1.br.fire()) {
+                writeRespCount(i) := writeRespCount(i) - 1.U
+            }
+
+            // read MO counter
+            when(reset.asBool) {
+                readCount(i) := 0.U
+            } .elsewhen(node.out(i)._1.ar.fire() && !node.out(i)._1.r.fire()) {
+                readCount(i) := readCount(i) + 1.U
+            } .elsewhen(!node.out(i)._1.ar.fire() && node.out(i)._1.r.fire()) {
+                readCount(i) := readCount(i) - 1.U
+            }
 
             // awvalid control
             when(reset.asBool) {
                 awvalid(i) := false.B
             } .elsewhen(!io.dmaEnable && awvalid(i)) { // disabled DMA
                 awvalid(i) := false.B
-            } .elsewhen(io.maxMO === currentAwMO(i)) { // reached max MO
+            } .elsewhen(io.maxMO === writeDataCount(i)) { // reached max MO
                 awvalid(i) := false.B
             } .elsewhen(io.dmaEnable && !awvalid(i)) { // generate aw-transaction
                 awvalid(i) := true.B
@@ -153,18 +187,18 @@ class A4LMaster(numPorts: Int, addrWidth: Int, dataWidth: Int, idWidth: Int)(imp
             // wvalid control
             when(reset.asBool) {
                 wvalid(i) := false.B
-            } .elsewhen(!io.dmaEnable && wvalid(i)) {
+            } .elsewhen(!io.dmaEnable && wvalid(i)) { // disabled DMA
                 wvalid(i) := false.B
-            } .elsewhen(io.dmaEnable && !wvalid(i)) {
+            } .elsewhen(io.dmaEnable && writeDataCount.asBool) { // generate w-transaction
                 wvalid(i) := true.B
             }
 
             // arvalid control
             when(reset.asBool) {
                 arvalid(i) := false.B
-            } .elsewhen(!io.dmaEnable && arvalid(i)) {
+            } .elsewhen(!io.dmaEnable && arvalid(i)) { // disabled DMA
                 arvalid(i) := false.B
-            } .elsewhen(io.dmaEnable && !arvalid(i)) {
+            } .elsewhen(io.dmaEnable && readCount.asBool) { // generate w-transaction
                 arvalid(i) := true.B
             }
         }
@@ -172,6 +206,4 @@ class A4LMaster(numPorts: Int, addrWidth: Int, dataWidth: Int, idWidth: Int)(imp
 
     override lazy val desireName = "DMA_AXI4Lite"
 }
-
-
 
