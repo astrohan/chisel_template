@@ -231,7 +231,16 @@ class A4LTestHarness()(implicit p: Parameters) extends LazyModule {
     val master = LazyModule(new A4LMaster(numPorts = 6, addrWidth = 32, dataWidth = 64, idWidth = 4, moCntWidth = 4))
     val slave  = LazyModule(new A4LSlave (moCntWidth = 4))
 
-    slave.node = := master.node
+    slave.node := master.node
 
     override lazy val desireName = "AXI4LiteTestHarness"
+}
+
+object GenA4LTest extends App {
+  println("Hello")
+  //emitVerilog(LazyModule(new AdderTestHarness()(Parameters.empty)).module, Array("--target-dir", "generated"))
+  new chisel3.stage.ChiselStage().emitSystemVerilog(
+    LazyModule(new A4LTestHarness()(Parameters.empty)).module,
+    Array("--target-dir", "generated")
+  ) // generate systemverilog rtl
 }
