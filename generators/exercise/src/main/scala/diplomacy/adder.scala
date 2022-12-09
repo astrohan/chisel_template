@@ -72,20 +72,23 @@ class Adder(implicit p: Parameters) extends LazyModule {
 class AdderDriver(width: Int, numOutputs: Int)(implicit p: Parameters) extends LazyModule {
   val node = new AdderDriverNode(Seq.fill(numOutputs)(DownwardParam(width)))
 
-  lazy val module = new LazyModuleImp(this) {
-    // check that node parameters converge after negotiation
-    val negotiatedWidths = node.edges.out.map(_.width)
-    require(negotiatedWidths.forall(_ == negotiatedWidths.head), "outputs must all have agreed on same width")
-    val finalWidth = negotiatedWidths.head
-
-    // generate random addend (notice the use of the negotiated width)
-    val randomAddend = FibonacciLFSR.maxPeriod(finalWidth)
-
-    // drive signals
-    node.out.foreach { case (addend, _) => addend := randomAddend }
-  }
+  lazy val module = new AdderDriverModule(this)
 
   override lazy val desiredName = "AdderDriver"
+}
+
+class AdderDriverModule(outer: AdderDriver) extends LazyModuleImp(outer) {
+val node = outer.node
+  // check that node parameters converge after negotiation
+  val negotiatedWidths = node.edges.out.map(_.width)
+  require(negotiatedWidths.forall(_ == negotiatedWidths.head), "outputs must all have agreed on same width")
+  val finalWidth = negotiatedWidths.head
+
+  // generate random addend (notice the use of the negotiated width)
+  val randomAddend = FibonacciLFSR.maxPeriod(finalWidth)
+
+  // drive signals
+  node.out.foreach { case (addend, _) => addend := randomAddend }
 }
 
 
@@ -94,19 +97,21 @@ class AdderMonitor(width: Int, numOperands: Int)(implicit p: Parameters) extends
   val nodeSeq = Seq.fill(numOperands) { new AdderMonitorNode(UpwardParam(width)) }
   val nodeSum = new AdderMonitorNode(UpwardParam(width))
 
-  lazy val module = new LazyModuleImp(this) {
-    val io = IO(new Bundle {
-      val error = Output(Bool())
-    })
-
-    // print operation
-    printf(nodeSeq.map(node => p"${node.in.head._1}").reduce(_ + p" + " + _) + p" = ${nodeSum.in.head._1}")
-
-    // basic correctness checking
-    io.error := nodeSum.in.head._1 =/= nodeSeq.map(_.in.head._1).reduce(_ + _)
-  }
+  lazy val module = new AdderMonitorModule(this)
 
   override lazy val desiredName = "AdderMonitor"
+}
+
+class AdderMonitorModule(outer: AdderMonitor) extends LazyModuleImp(outer) {
+  val io = IO(new Bundle {
+    val error = Output(Bool())
+  })
+
+  // print operation
+  printf(outer.nodeSeq.map(node => p"${node.in.head._1}").reduce(_ + p" + " + _) + p" = ${outer.nodeSum.in.head._1}")
+
+  // basic correctness checking
+  io.error := outer.nodeSum.in.head._1 =/= outer.nodeSeq.map(_.in.head._1).reduce(_ + _)
 }
 
 
